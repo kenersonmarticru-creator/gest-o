@@ -1,0 +1,71 @@
+[build]
+  publish = "public"
+  command = "echo 'No build needed'"
+
+[functions]
+  directory = "netlify/functions"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/menu"
+  to = "/menu.html"
+  status = 200
+
+[[redirects]]
+  from = "/ferramentas"
+  to = "/ferramentas.html"
+  status = 200
+
+[[redirects]]
+  from = "/painel"
+  to = "/painel.html"
+  status = 200
+
+[[redirects]]
+  from = "/qlp"
+  to = "/qlp.html"
+  status = 200
+
+[[redirects]]
+  from = "/producao"
+  to = "/producao.html"
+  status = 200
+
+[[redirects]]
+  from = "/resumo-base"
+  to = "/resumo-base.html"
+  status = 200
+
+[[redirects]]
+  from = "/mapacarga"
+  to = "/mapacarga.html"
+  status = 200
+
+[[redirects]]
+  from = "/avaria"
+  to = "/avaria.html"
+  status = 200
+
+[[redirects]]
+  from = "/alocacaobox"
+  to = "/alocacaobox.html"
+  status = 200
+
+[[redirects]]
+  from = "/controle-coletores"
+  to = "/controle-coletores.html"
+  status = 200
+
+[[redirects]]
+  from = "/resumo-equipamentos"
+  to = "/resumo-equipamentos.html"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

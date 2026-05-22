@@ -437,6 +437,7 @@ async function atualizarStatus(matricula,selectEl){
       body:JSON.stringify({
         action:'updateStatus',
         supervisor:supervisor,
+        aba:aba,
         matricula:matricula,
         status:novoStatus
       })
@@ -461,6 +462,7 @@ async function atualizarDesvio(matricula,selectEl){
       body:JSON.stringify({
         action:'updateDesvio',
         supervisor:supervisor,
+        aba:aba,
         matricula:matricula,
         desvio:novoDesvio
       })
@@ -566,11 +568,10 @@ async function confirmarSalvar(){
       let desvioFinal = c.desvio;
 
       if(tr){
-        // Lê o valor atual do select de status (o usuário pode ter mudado sem acionar o evento)
-        const selStatus = tr.querySelector('select:nth-of-type(1)');
-        const selDesvio = tr.querySelector('select:nth-of-type(2)');
-        if(selStatus) statusFinal = selStatus.value;
-        if(selDesvio) desvioFinal = selDesvio.value;
+        // Lê o valor atual dos selects pelo índice (nth-of-type não funciona entre <td>s)
+        const selects = tr.querySelectorAll('select');
+        if(selects[0]) statusFinal = selects[0].value;
+        if(selects[1]) desvioFinal = selects[1].value;
       }
 
       return [

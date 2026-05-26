@@ -195,12 +195,23 @@ module.exports = async function handler(req, res) {
           return res.status(200).json(result);
         }
 
+        case 'importarBase': {
+          const { supervisor, aba, dados } = req.body;
+          if (!supervisor || !aba || !dados || !Array.isArray(dados)) {
+            return res.status(400).json({ ok: false, msg: 'Supervisor, aba e dados são obrigatórios' });
+          }
+          console.log('[API COLABORADORES] Importando base colada:', { supervisor, aba, linhas: dados.length });
+          const result = await sheetsService.processarBaseColado(supervisor, aba, dados);
+          console.log('[API COLABORADORES] Resultado importação:', result);
+          return res.status(200).json(result);
+        }
+
         default:
           console.error('[API COLABORADORES] Ação não reconhecida:', action);
-          return res.status(400).json({ 
-            ok: false, 
+          return res.status(400).json({
+            ok: false,
             msg: 'Ação não reconhecida: ' + action,
-            acoesDisponiveis: ['addBuffer', 'getBuffer', 'removeBuffer', 'updateStatus', 'updateDesvio', 'saveToBase']
+            acoesDisponiveis: ['addBuffer', 'getBuffer', 'removeBuffer', 'updateStatus', 'updateDesvio', 'saveToBase', 'importarBase']
           });
       }
     } catch (error) {

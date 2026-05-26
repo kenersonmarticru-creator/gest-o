@@ -483,6 +483,7 @@ async function remover(matricula){
       body:JSON.stringify({
         action:'removeBuffer',
         supervisor:supervisor,
+        aba:aba,
         matricula:matricula
       })
     });

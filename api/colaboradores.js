@@ -98,90 +98,70 @@ module.exports = async function handler(req, res) {
 
         case 'removeBuffer': {
           const { supervisor, aba, matricula } = req.body;
-          
-          // Validação de parâmetros
-          if (!supervisor || !matricula) {
-            console.error('[API COLABORADORES] Parâmetros faltando:', { 
-              supervisor: !!supervisor, 
-              matricula: !!matricula 
+
+          if (!supervisor || !aba || !matricula) {
+            console.error('[API COLABORADORES] Parâmetros faltando:', {
+              supervisor: !!supervisor,
+              aba: !!aba,
+              matricula: !!matricula
             });
-            return res.status(400).json({ 
-              ok: false, 
-              msg: 'Supervisor e matrícula são obrigatórios' 
+            return res.status(400).json({
+              ok: false,
+              msg: 'Supervisor, aba e matrícula são obrigatórios'
             });
           }
-          
-          console.log('[API COLABORADORES] Removendo colaborador:', { 
-            supervisor, 
-            aba, 
-            matricula 
-          });
-          
-          // Usa aba como chave principal se fornecida, senão usa supervisor
-          const chave = aba || supervisor;
-          const result = await sheetsService.removerBufferPorAba(chave, matricula);
-          
+
+          console.log('[API COLABORADORES] Removendo colaborador:', { supervisor, aba, matricula });
+
+          const result = await sheetsService.removerBufferPorAba(supervisor, aba, matricula);
+
           console.log('[API COLABORADORES] Resultado da remoção:', result);
           return res.status(200).json(result);
         }
 
         case 'updateStatus': {
           const { supervisor, aba, matricula, status } = req.body;
-          
-          // Validação de parâmetros
-          if (!supervisor || !matricula || status === undefined) {
-            console.error('[API COLABORADORES] Parâmetros faltando:', { 
-              supervisor: !!supervisor, 
-              matricula: !!matricula, 
-              status: status !== undefined 
+
+          if (!supervisor || !aba || !matricula || status === undefined) {
+            console.error('[API COLABORADORES] Parâmetros faltando:', {
+              supervisor: !!supervisor,
+              aba: !!aba,
+              matricula: !!matricula,
+              status: status !== undefined
             });
-            return res.status(400).json({ 
-              ok: false, 
-              msg: 'Supervisor, matrícula e status são obrigatórios' 
+            return res.status(400).json({
+              ok: false,
+              msg: 'Supervisor, aba, matrícula e status são obrigatórios'
             });
           }
-          
-          console.log('[API COLABORADORES] Atualizando status:', { 
-            supervisor, 
-            aba, 
-            matricula, 
-            status 
-          });
-          
-          // Usa aba como chave principal se fornecida, senão usa supervisor
-          const chave = aba || supervisor;
-          const result = await sheetsService.atualizarStatusBufferPorAba(chave, matricula, status);
-          
+
+          console.log('[API COLABORADORES] Atualizando status:', { supervisor, aba, matricula, status });
+
+          const result = await sheetsService.atualizarStatusBufferPorAba(supervisor, aba, matricula, status);
+
           console.log('[API COLABORADORES] Resultado da atualização:', result);
           return res.status(200).json(result);
         }
 
         case 'updateDesvio': {
           const { supervisor, aba, matricula, desvio } = req.body;
-          
-          // Validação de parâmetros
-          if (!supervisor || !matricula) {
-            console.error('[API COLABORADORES] Parâmetros faltando:', { 
-              supervisor: !!supervisor, 
-              matricula: !!matricula 
+
+          if (!supervisor || !aba || !matricula) {
+            console.error('[API COLABORADORES] Parâmetros faltando:', {
+              supervisor: !!supervisor,
+              aba: !!aba,
+              matricula: !!matricula
             });
-            return res.status(400).json({ 
-              ok: false, 
-              msg: 'Supervisor e matrícula são obrigatórios' 
+            return res.status(400).json({
+              ok: false,
+              msg: 'Supervisor, aba e matrícula são obrigatórios'
             });
           }
-          
-          console.log('[API COLABORADORES] Atualizando desvio:', { 
-            supervisor, 
-            aba, 
-            matricula, 
-            desvio 
-          });
-          
-          // Usa aba como chave principal se fornecida, senão usa supervisor
-          const chave = aba || supervisor;
-          const result = await sheetsService.atualizarDesvioBufferPorAba(chave, matricula, desvio);
-          
+
+          console.log('[API COLABORADORES] Atualizando desvio:', { supervisor, aba, matricula, desvio });
+
+          const result = await sheetsService.atualizarDesvioBufferPorAba(supervisor, aba, matricula, desvio);
+
           console.log('[API COLABORADORES] Resultado da atualização:', result);
           return res.status(200).json(result);
         }

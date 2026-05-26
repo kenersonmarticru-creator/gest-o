@@ -97,71 +97,43 @@ module.exports = async function handler(req, res) {
         }
 
         case 'removeBuffer': {
-          const { supervisor, aba, matricula } = req.body;
+          const { aba, supervisor, matricula } = req.body;
+          const chave = aba || supervisor;
 
-          if (!supervisor || !aba || !matricula) {
-            console.error('[API COLABORADORES] Parâmetros faltando:', {
-              supervisor: !!supervisor,
-              aba: !!aba,
-              matricula: !!matricula
-            });
-            return res.status(400).json({
-              ok: false,
-              msg: 'Supervisor, aba e matrícula são obrigatórios'
-            });
+          if (!chave || !matricula) {
+            return res.status(400).json({ ok: false, msg: 'Supervisor/aba e matrícula são obrigatórios' });
           }
 
-          console.log('[API COLABORADORES] Removendo colaborador:', { supervisor, aba, matricula });
-
-          const result = await sheetsService.removerBufferPorAba(supervisor, aba, matricula);
-
+          console.log('[API COLABORADORES] Removendo colaborador:', { chave, matricula });
+          const result = await sheetsService.removerBufferPorAba(chave, matricula);
           console.log('[API COLABORADORES] Resultado da remoção:', result);
           return res.status(200).json(result);
         }
 
         case 'updateStatus': {
-          const { supervisor, aba, matricula, status } = req.body;
+          const { aba, supervisor, matricula, status } = req.body;
+          const chave = aba || supervisor;
 
-          if (!supervisor || !aba || !matricula || status === undefined) {
-            console.error('[API COLABORADORES] Parâmetros faltando:', {
-              supervisor: !!supervisor,
-              aba: !!aba,
-              matricula: !!matricula,
-              status: status !== undefined
-            });
-            return res.status(400).json({
-              ok: false,
-              msg: 'Supervisor, aba, matrícula e status são obrigatórios'
-            });
+          if (!chave || !matricula || status === undefined) {
+            return res.status(400).json({ ok: false, msg: 'Supervisor/aba, matrícula e status são obrigatórios' });
           }
 
-          console.log('[API COLABORADORES] Atualizando status:', { supervisor, aba, matricula, status });
-
-          const result = await sheetsService.atualizarStatusBufferPorAba(supervisor, aba, matricula, status);
-
+          console.log('[API COLABORADORES] Atualizando status:', { chave, matricula, status });
+          const result = await sheetsService.atualizarStatusBufferPorAba(chave, matricula, status);
           console.log('[API COLABORADORES] Resultado da atualização:', result);
           return res.status(200).json(result);
         }
 
         case 'updateDesvio': {
-          const { supervisor, aba, matricula, desvio } = req.body;
+          const { aba, supervisor, matricula, desvio } = req.body;
+          const chave = aba || supervisor;
 
-          if (!supervisor || !aba || !matricula) {
-            console.error('[API COLABORADORES] Parâmetros faltando:', {
-              supervisor: !!supervisor,
-              aba: !!aba,
-              matricula: !!matricula
-            });
-            return res.status(400).json({
-              ok: false,
-              msg: 'Supervisor, aba e matrícula são obrigatórios'
-            });
+          if (!chave || !matricula) {
+            return res.status(400).json({ ok: false, msg: 'Supervisor/aba e matrícula são obrigatórios' });
           }
 
-          console.log('[API COLABORADORES] Atualizando desvio:', { supervisor, aba, matricula, desvio });
-
-          const result = await sheetsService.atualizarDesvioBufferPorAba(supervisor, aba, matricula, desvio);
-
+          console.log('[API COLABORADORES] Atualizando desvio:', { chave, matricula, desvio });
+          const result = await sheetsService.atualizarDesvioBufferPorAba(chave, matricula, desvio);
           console.log('[API COLABORADORES] Resultado da atualização:', result);
           return res.status(200).json(result);
         }

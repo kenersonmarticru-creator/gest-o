@@ -57,6 +57,11 @@ select{padding:8px 10px;border-radius:6px;border:1px solid #ccc;min-width:120px}
 .empty-state{text-align:center;color:#666;font-style:italic;padding:40px 20px}
 .loading-spinner{display:inline-block;animation:spin 1s linear infinite}
 @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.paste-area{width:100%;min-height:120px;padding:12px;border:2px dashed #1976d2;border-radius:8px;font-family:'Courier New',monospace;font-size:12px;resize:vertical;background:#f8f9fa;box-sizing:border-box}
+.paste-area:focus{outline:none;border-color:#0d47a1;background:white}
+.paste-preview{margin-top:15px;overflow-x:auto;border-radius:8px}
+.paste-preview table{font-size:13px}
+.paste-info{background:#e3f2fd;border-left:4px solid #1976d2;padding:12px;border-radius:6px;color:#0d47a1;font-size:13px;margin-bottom:15px}
 @media(max-width:768px){
 body{margin:10px}
 .header{flex-direction:column;text-align:center}
@@ -120,6 +125,26 @@ th,td{padding:8px}
 <button class="btn-success" id="btnSalvar" onclick="salvarBuffer()"><i class="fas fa-save"></i> Salvar</button>
 <button class="btn-info" onclick="window.print()"><i class="fas fa-print"></i> Imprimir Lista</button>
 <span id="statusSalvar" class="status-message"></span>
+</div>
+</div>
+<div class="section">
+<h3><i class="fas fa-paste"></i> Importar via Cola (Excel)</h3>
+<div class="paste-info">
+  <i class="fas fa-info-circle"></i> Cole dados diretamente do Excel. Colunas esperadas (na ordem):
+  <strong>Matrícula | Nome | Função | Status | Desvio</strong><br>
+  Supervisor, Aba e Data são preenchidos automaticamente pela sessão atual.
+</div>
+<textarea class="paste-area" id="pasteBaseArea" placeholder="Cole aqui os dados do Excel (Ctrl+V)...&#10;&#10;Exemplo:&#10;12345&#9;JOÃO SILVA&#9;OPERADOR&#9;Presente&#9;&#10;67890&#9;MARIA SOUZA&#9;AUXILIAR&#9;Ausente&#9;"></textarea>
+<div id="pasteBaseInfo" style="display:none;margin-top:10px;color:#1976d2;font-weight:600"></div>
+<div class="paste-preview" id="pasteBasePreview"></div>
+<div style="margin-top:15px;display:flex;gap:10px;flex-wrap:wrap">
+  <button class="btn-primary" id="btnImportarBase" onclick="importarBase()" disabled>
+    <i class="fas fa-file-import"></i> Importar para Base
+  </button>
+  <button class="btn-secondary" onclick="limparCola()">
+    <i class="fas fa-eraser"></i> Limpar
+  </button>
+  <span id="statusImportar" class="status-message"></span>
 </div>
 </div>
 <div id="modalConfirm" class="modal">
@@ -437,7 +462,6 @@ async function atualizarStatus(matricula,selectEl){
       body:JSON.stringify({
         action:'updateStatus',
         supervisor:supervisor,
-        aba:aba,
         matricula:matricula,
         status:novoStatus
       })
@@ -462,7 +486,6 @@ async function atualizarDesvio(matricula,selectEl){
       body:JSON.stringify({
         action:'updateDesvio',
         supervisor:supervisor,
-        aba:aba,
         matricula:matricula,
         desvio:novoDesvio
       })
@@ -568,10 +591,10 @@ async function confirmarSalvar(){
       let desvioFinal = c.desvio;
 
       if(tr){
-        // Lê o valor atual dos selects pelo índice (nth-of-type não funciona entre <td>s)
-        const selects = tr.querySelectorAll('select');
-        if(selects[0]) statusFinal = selects[0].value;
-        if(selects[1]) desvioFinal = selects[1].value;
+        const selStatus = tr.querySelector('select:nth-of-type(1)');
+        const selDesvio = tr.querySelector('select:nth-of-type(2)');
+        if(selStatus) statusFinal = selStatus.value;
+        if(selDesvio) desvioFinal = selDesvio.value;
       }
 
       return [
@@ -657,7 +680,140 @@ window.onload=function(){
     return;
   }
   atualizarTabela();
+
+  // Listener da área de cola
+  const pasteArea = document.getElementById('pasteBaseArea');
+  if(pasteArea){
+    pasteArea.addEventListener('input', function(){
+      parsearCola(this.value);
+    });
+  }
 };
+
+// ===== IMPORTAR VIA COLA =====
+
+let dadosCola = [];
+
+function parsearCola(texto){
+  const info  = document.getElementById('pasteBaseInfo');
+  const preview = document.getElementById('pasteBasePreview');
+  const btn   = document.getElementById('btnImportarBase');
+
+  if(!texto || !texto.trim()){
+    info.style.display='none';
+    preview.innerHTML='';
+    btn.disabled=true;
+    dadosCola=[];
+    return;
+  }
+
+  const linhas = texto.trim().split('\n').filter(l => l.trim());
+  dadosCola = [];
+
+  linhas.forEach(linha => {
+    const cols = linha.split('\t');
+    const matricula = String(cols[0]||'').trim();
+    const nome      = String(cols[1]||'').trim();
+    if(!matricula && !nome) return;
+    dadosCola.push([
+      matricula,
+      nome,
+      String(cols[2]||'').trim(),
+      String(cols[3]||'').trim(),
+      String(cols[4]||'').trim()
+    ]);
+  });
+
+  if(dadosCola.length === 0){
+    info.style.display='none';
+    preview.innerHTML='';
+    btn.disabled=true;
+    return;
+  }
+
+  info.textContent = `${dadosCola.length} linha(s) detectada(s) — pronto para importar`;
+  info.style.display='block';
+  btn.disabled=false;
+
+  // Preview (máximo 10 linhas)
+  const amostras = dadosCola.slice(0, 10);
+  preview.innerHTML = `
+    <table style="margin-top:10px">
+      <thead>
+        <tr>
+          <th>Matrícula</th><th>Nome</th><th>Função</th><th>Status</th><th>Desvio</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${amostras.map(r=>`
+          <tr>
+            <td><strong>${r[0]}</strong></td>
+            <td>${r[1]}</td>
+            <td>${r[2]||'-'}</td>
+            <td>${r[3]||'-'}</td>
+            <td>${r[4]||'-'}</td>
+          </tr>`).join('')}
+        ${dadosCola.length > 10 ? `<tr><td colspan="5" style="text-align:center;color:#666;font-style:italic">... e mais ${dadosCola.length-10} linha(s)</td></tr>` : ''}
+      </tbody>
+    </table>`;
+}
+
+async function importarBase(){
+  if(!dadosCola || dadosCola.length === 0){
+    showStatus('Nenhum dado para importar','error');
+    return;
+  }
+
+  const btn      = document.getElementById('btnImportarBase');
+  const statusEl = document.getElementById('statusImportar');
+  const original = btn.innerHTML;
+  btn.disabled=true;
+  btn.innerHTML='<i class="fas fa-spinner loading-spinner"></i> Importando...';
+  statusEl.innerHTML='<i class="fas fa-spinner loading-spinner"></i> Enviando...';
+  statusEl.className='status-message status-loading';
+
+  try{
+    const response = await fetch('/api/colaboradores',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        action:'importarBase',
+        supervisor:supervisor,
+        aba:aba,
+        dados:dadosCola
+      })
+    });
+    const result = await response.json();
+    if(result.ok){
+      statusEl.innerHTML=`<i class="fas fa-check"></i> ${result.msg}`;
+      statusEl.className='status-message status-success';
+      showStatus(result.msg,'success');
+      limparCola();
+    }else{
+      throw new Error(result.msg||'Erro ao importar');
+    }
+  }catch(error){
+    console.error('Erro ao importar:',error);
+    statusEl.innerHTML='<i class="fas fa-exclamation-triangle"></i> Erro ao importar';
+    statusEl.className='status-message status-error';
+    showStatus('Erro ao importar dados','error');
+  }finally{
+    btn.innerHTML=original;
+    btn.disabled=false;
+    setTimeout(()=>{
+      statusEl.innerHTML='';
+      statusEl.className='status-message';
+    },5000);
+  }
+}
+
+function limparCola(){
+  document.getElementById('pasteBaseArea').value='';
+  document.getElementById('pasteBaseInfo').style.display='none';
+  document.getElementById('pasteBasePreview').innerHTML='';
+  document.getElementById('btnImportarBase').disabled=true;
+  dadosCola=[];
+}
 </script>
 </body>
 </html>
